@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package greet;
+
+option go_package = "com.grpc.greetpb";
+
+// Define the message for Greeting
+message Greeting {
+    string f_name = 1;
+    string l_name = 2;
+}
+
+// Define the request message for the Greet RPC
+message GreetRequest {
+    Greeting greeting = 1;
+}
+
+// Define the response message for the Greet RPC
+message GreetResponse {
+    string result = 1;
+}
+
+// Better to create separate request and response message for each RCP 
+// as initially messages might seem identical and later on they may get drift apart.
+message GreetManyTimesRequest {
+    Greeting Greeting = 1;
+}
+
+message GreetManyTimesResponse {
+    string result = 1;
+}
+
+message LongGreetRequest {
+    Greeting Greeting = 1;
+}
+
+message LongGreetResponse {
+    string result = 1;
+}
+
+// Define a service
+service GreetService {
+    // Unary
+    rpc Greet (GreetRequest) returns (GreetResponse) {};
+    // rpc Something (SomethingRequest) returns (SomethingResopnse)
+    // Follow this naming convention to scale easily
+
+    // Server Streaming
+    rpc GreetManyTimes (GreetManyTimesRequest) returns (stream GreetManyTimesResponse) {};
+
+    // Client Streaming
+    rpc LongGreet (stream LongGreetRequest) returns (LongGreetResponse) {};
+}
