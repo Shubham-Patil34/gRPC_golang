@@ -22,7 +22,16 @@ message PrimeFactorizationResponse {
     int32 factor = 1;
 }
 
+message CalculateAverageRequest {
+    int32 number = 1;
+}
+
+message CalculateAverageResponse {
+    double average = 1;
+}
+
 service CalculatorService {
     rpc Calculator (CalculatorRequest) returns (CalculatorResponse) {};
     rpc PrimeFactorization (PrimeFactorizationRequest) returns (stream  PrimeFactorizationResponse) {};
+    rpc CalculateAverage (stream CalculateAverageRequest) returns (CalculateAverageResponse) {};
 }
