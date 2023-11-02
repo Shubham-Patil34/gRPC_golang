@@ -26,7 +26,8 @@ func main() {
 
 	// doUnary(client)
 	// doServerStreaming(client)
-	doClientStreaming(client)
+	// doClientStreaming(client)
+	doBiDiStreaming(client)
 }
 
 // Unary API function
@@ -120,5 +121,69 @@ func doClientStreaming(client greetpb.GreetServiceClient){
 		log.Fatalf("Failed to read response from LongGreet: %v", err)
 	}
 	fmt.Println("LongGreet response: ", res)
+		
+}
+
+// Server Stream API function
+func doBiDiStreaming(client greetpb.GreetServiceClient){
+	// Make a gRPC request
+	requests := []*greetpb.GreetEveryoneRequest{
+		{
+			Greeting: &greetpb.Greeting{
+				FName: "Krishna",
+			},
+		},
+		{
+			Greeting: &greetpb.Greeting{
+				FName: "Suraj",
+			},
+		},
+		{
+			Greeting: &greetpb.Greeting{
+				FName: "Pruthvi",
+			},
+		},
+		{
+			Greeting: &greetpb.Greeting{
+				FName: "Rohit",
+			},
+		},
+	}
+
+	// Create a stream
+	respStream, err := client.GreetEveryone(context.Background())
+	if err != nil {
+		log.Fatalf("Failed to call GreetEveryone: %v", err)
+	}
+
+	waitc := make(chan struct{})
+	// Send a bunch of messages (go routine)
+	go func() {
+		for _, req := range requests {
+			fmt.Printf("Sending Greeting: %v\n", req)
+			respStream.Send(req)
+			time.Sleep(2000 * time.Millisecond)
+		}
+		respStream.CloseSend()
+	}()	
+	
+	// Receive a bunch of messages (go routine)
+	go func() {
+		for {
+			res, err := respStream.Recv()
+			if err == io.EOF {
+				// We have reached the end of stream
+				break
+			}
+			if err != nil {
+				log.Fatalf("Failed to read response from GreetEveryone: %v", err)
+			}
+			fmt.Println("GreetEveryone response: ", res.GetResult())
+		}
+		close(waitc)
+	}()
+
+	// Block until everything is done
+	<-waitc
 		
 }

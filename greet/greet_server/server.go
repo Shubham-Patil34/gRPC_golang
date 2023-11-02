@@ -60,6 +60,34 @@ func (*GreetServiceServer) LongGreet(stream greetpb.GreetService_LongGreetServer
 		}
 		result = msg.Greeting.GetFName() + ", " + result
 	}
+	
+}
+
+// GreetEveryone implements com_grpc_greetpb.GreetServiceServer.
+func (*GreetServiceServer) GreetEveryone(stream greetpb.GreetService_GreetEveryoneServer) error {
+	fmt.Println(time.Now().Format("2006/01/02 15:04:05"), "GreetEveryone function was invoked")
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			// We have reached the end of stream
+			stream.Send(&greetpb.GreetEveryoneResponse{
+				Result: "Enjoy..!",
+			})
+			return nil
+		}
+		if err != nil {
+			log.Fatalf("Failed to read client stream: %v", err)
+		}
+
+		fmt.Println("Client greeting from : ", req.Greeting.GetFName())
+		sendErr := stream.Send(&greetpb.GreetEveryoneResponse{
+			Result: "Radhe Radhe, "+ req.Greeting.GetFName(),
+		})
+		if sendErr != nil {
+			log.Fatalf("Failed to send response to client: %v", sendErr)
+		}
+	}
 
 }
 
