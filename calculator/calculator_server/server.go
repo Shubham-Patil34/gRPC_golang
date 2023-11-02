@@ -39,7 +39,7 @@ func (s *CalculatorServiceServer) PrimeFactorization(req *calculatorpb.PrimeFact
 	fmt.Println(time.Now().Format("2006/01/02 15:04:05"), "PrimeFactorization function is invoked by: ", req)
 	// Get the number
 	num := req.GetNumber()
-	
+
 	res := &calculatorpb.PrimeFactorizationResponse{}
 	// While the number is even
 	for num%2 == 0 {
@@ -47,7 +47,7 @@ func (s *CalculatorServiceServer) PrimeFactorization(req *calculatorpb.PrimeFact
 		stream.Send(res)
 		num /= 2
 	}
-	
+
 	// While number is odd
 	for i := 3; int32(i*i) <= num; i += 2 {
 		for num%int32(i) == 0 {
@@ -56,7 +56,7 @@ func (s *CalculatorServiceServer) PrimeFactorization(req *calculatorpb.PrimeFact
 			num /= int32(i)
 		}
 	}
-	
+
 	// if the number is prime number greater than 2
 	if num > 2 {
 		res.Factor = num
@@ -72,12 +72,12 @@ func (*CalculatorServiceServer) CalculateAverage(stream calculatorpb.CalculatorS
 	count := 0
 
 	for {
-		
+
 		msg, err := stream.Recv()
 		if err == io.EOF {
 			// We have reached end of stream
 			return stream.SendAndClose(&calculatorpb.CalculateAverageResponse{
-				Average: float64(sum)/float64(count),
+				Average: float64(sum) / float64(count),
 			})
 		}
 
@@ -88,6 +88,34 @@ func (*CalculatorServiceServer) CalculateAverage(stream calculatorpb.CalculatorS
 		count++
 
 	}
+}
+
+// FindMaximum implements com_grpc_calculatorpb.CalculatorServiceServer.
+func (*CalculatorServiceServer) FindMaximum(stream calculatorpb.CalculatorService_FindMaximumServer) error {
+	fmt.Println(time.Now().Format("2006/01/02 15:04:05"), "FindMaximum function is invoked by client stream:")
+	max := 0
+
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			// We have reached end of stream
+			return nil
+		}
+		if err != nil {
+			log.Fatalf("Failed to read stream from client: %v", err)
+		}
+		if res.GetNumber() > int32(max) {
+			max = int(res.GetNumber())
+		}
+
+		err = stream.Send(&calculatorpb.FindMaximumResponse{
+			Maximum: int32(max),
+		})
+		if err != nil {
+			log.Fatalf("Failed to send response to client: %v", err)
+		}
+	}
+	
 }
 
 func main() {
