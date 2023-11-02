@@ -38,9 +38,20 @@ message FindMaximumResponse {
     int32 maximum = 1;
 }
 
+message SquareRootRequest {
+    double number = 1;
+}
+
+message SquareRootResponse {
+    double root = 1;
+}
+
 service CalculatorService {
     rpc Calculator (CalculatorRequest) returns (CalculatorResponse) {};
     rpc PrimeFactorization (PrimeFactorizationRequest) returns (stream  PrimeFactorizationResponse) {};
     rpc CalculateAverage (stream CalculateAverageRequest) returns (CalculateAverageResponse) {};
     rpc FindMaximum (stream FindMaximumRequest) returns (stream FindMaximumResponse) {};
+    
+    // Error code implementation : require non-negative input -> INVALID_ARGUMENT
+    rpc SquareRoot (SquareRootRequest) returns (SquareRootResponse) {};
 }

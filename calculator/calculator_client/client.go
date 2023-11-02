@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func main() {
@@ -32,7 +34,8 @@ func main() {
 
 	// Client Streaming
 	// doClientStreaming(client)
-	doBiDiStreaming(client)
+	// doBiDiStreaming(client)
+	doSquareRoot(client)
 }
 
 func doUnary(client calculatorpb.CalculatorServiceClient){
@@ -145,4 +148,34 @@ func doBiDiStreaming(client calculatorpb.CalculatorServiceClient){
 	}()
 
 	<-waitc
+}
+
+// Error code implementation for Square root calculation
+func doSquareRoot(client calculatorpb.CalculatorServiceClient){
+	// Correct call
+	doErrorCall(client, 10)
+
+	// Erroneous  call
+	doErrorCall(client, -3)
+}
+
+func doErrorCall(client calculatorpb.CalculatorServiceClient, number float64) {
+	resp, err := client.SquareRoot(context.Background(), &calculatorpb.SquareRootRequest{
+		Number: number,
+	})
+	if err != nil {
+		respErr, ok := status.FromError(err)
+		if ok {
+			// Actual err from gRPC (user error)
+			fmt.Println(respErr.Message())
+			fmt.Println(respErr.Code())
+			if respErr.Code() == codes.InvalidArgument {
+				fmt.Println("We probably sent a negative number!")
+			}
+		} else {
+			log.Fatalf("Failed to send request to SquareRoot: %v", err)
+		}
+	}
+
+	fmt.Println("Response from SquareRoot: ", resp.GetRoot())
 }
